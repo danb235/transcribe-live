@@ -80,7 +80,11 @@ def process_audio_chunks(model, output_file):
 
                 if len(accumulated_audio) >= 5 * 16000:
                     result = model.transcribe(accumulated_audio, language="en")
+                    # Move the cursor up one line and clear the line
+                    print("\033[A\033[K", end='')
                     print("Transcription:", result["text"])
+                    # Move the cursor back down and print the stop message
+                    print("(Press Enter to stop)")
                     with open(output_file, 'a') as file:
                         file.write(result["text"] + "\n")
                     accumulated_audio = np.array([], dtype=np.float32)
@@ -144,3 +148,5 @@ if __name__ == "__main__":
             print("An error occurred:", e)
         finally:
             processing_thread.join()
+
+
