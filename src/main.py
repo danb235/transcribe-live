@@ -130,8 +130,9 @@ def record_live_audio(output_file_path):
 
     print(f"Recording completed. Output saved to {mp3_path}")
 
-if __name__ == "__main__":
-    args = setup_argparse()
+def main(args=None):
+    if args is None:
+        args = setup_argparse()
 
     # Define the model_map
     model_map = {
@@ -203,3 +204,6 @@ if __name__ == "__main__":
 
         if user_wants_to_record:
             recording_thread.join()
+
+if __name__ == "__main__":
+    main()

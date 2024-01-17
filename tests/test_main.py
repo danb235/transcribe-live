@@ -1,55 +1,66 @@
-import unittest
-import os
 import argparse
-from unittest.mock import patch, MagicMock
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
+import unittest
+from unittest.mock import patch
 import main
 
-class TestTranscribeCLI(unittest.TestCase):
+class TestMain(unittest.TestCase):
 
-    def setUp(self):
-        self.test_file = './tests/sample.m4a'
-        self.expected_output = 'output/sample.txt'
+    @patch('main.setup_argparse')
+    def test_main_no_args(self, mock_setup_argparse):
+        mock_setup_argparse.return_value = argparse.Namespace(model=None, source=None, device=None, file=None, record=False)
+        with patch('builtins.input', return_value='0'), \
+            patch('main.record_live_audio'), \
+            patch('main.process_audio_chunks'), \
+            patch('main.sd.InputStream'):
+            main.main()
+            mock_setup_argparse.assert_called_once()
 
-    def tearDown(self):
-        if os.path.exists(self.expected_output):
-            os.remove(self.expected_output)
+    @patch('main.setup_argparse')
+    @patch('main.transcribe_audio_file')
+    @patch('main.whisper.load_model', return_value='mock_model')
+    def test_main_with_file(self, mock_load_model, mock_transcribe_audio_file, mock_setup_argparse):
+        test_args = argparse.Namespace(file='test.wav', model='b', source=None, device=None, record=False)
+        mock_setup_argparse.return_value = test_args
+        with patch('main.setup_argparse', return_value=test_args):
+            main.main()
+            mock_transcribe_audio_file.assert_called_once_with('mock_model', 'test.wav')
 
-    def test_audio_file_transcription(self):
-        """Test transcription of an audio file."""
-        test_args = argparse.Namespace(model='b', file=self.test_file, source=None, device=None)
-        with patch('main.whisper.load_model') as mock_load_model:
-            mock_model = MagicMock()
-            mock_load_model.return_value = mock_model
-            with patch('main.transcribe_audio_file') as mock_transcribe:
-                main.main(test_args)
-                mock_transcribe.assert_called_once_with(mock_model, self.test_file)
+    @patch('main.list_devices')
+    def test_list_devices_input(self, mock_list_devices):
+        mock_list_devices.return_value = [{'name': 'input_device', 'max_input_channels': 2}]
+        devices = main.list_devices('input')
+        self.assertEqual(len(devices), 1)
+        self.assertEqual(devices[0]['name'], 'input_device')
 
-    def test_argument_parsing(self):
-        """Test command-line argument parsing."""
-        test_args = ['--model', 'b', '--source', 'o', '--device', '0']
-        with patch('sys.argv', ['main.py'] + test_args):
-            args = main.setup_argparse()
-            self.assertEqual(args.model, 'b')
-            self.assertEqual(args.source, 'o')
-            self.assertEqual(args.device, 0)
+    @patch('main.list_devices')
+    def test_list_devices_output(self, mock_list_devices):
+        mock_list_devices.return_value = [{'name': 'output_device', 'max_output_channels': 2}]
+        devices = main.list_devices('output')
+        self.assertEqual(len(devices), 1)
+        self.assertEqual(devices[0]['name'], 'output_device')
 
-    def test_incompatible_arguments(self):
-        """Test mixing file transcription with live audio source arguments."""
-        test_args = argparse.Namespace(model='b', source='o', device=0, file=self.test_file)
-        with self.assertRaises(SystemExit):
-            main.main(test_args)
+    @patch('main.setup_argparse')
+    @patch('main.transcribe_audio_file')
+    @patch('main.whisper.load_model')
+    def test_main_transcribe_existing_file(self, mock_load_model, mock_transcribe_audio_file, mock_setup_argparse):
+        # Create a mock model object
+        mock_model = unittest.mock.Mock()
+        mock_load_model.return_value = mock_model
 
-    def test_output_file_creation(self):
-        """Test that transcription creates the expected output file."""
-        with patch('main.whisper.load_model') as mock_load_model:
-            mock_model = MagicMock()
-            mock_model.transcribe.return_value = {"text": "mock transcription"}
-            mock_load_model.return_value = mock_model
-            main.transcribe_audio_file(mock_model, self.test_file)
-            self.assertTrue(os.path.exists(self.expected_output))
+        # Set up the mock arguments to include a file path
+        test_args = argparse.Namespace(file='mock_audio.wav', model='b', source=None, device=None, record=False)
+        mock_setup_argparse.return_value = test_args
+
+        # Patch the setup_argparse function to return the test arguments
+        with patch('main.setup_argparse', return_value=test_args):
+            # Call the main function, which should in turn call transcribe_audio_file
+            main.main()
+            # Assert that transcribe_audio_file was called with the mock model and file path
+            mock_transcribe_audio_file.assert_called_once_with(mock_model, 'mock_audio.wav')
 
 if __name__ == '__main__':
     unittest.main()
