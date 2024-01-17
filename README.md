@@ -9,6 +9,9 @@ Transcribe is a Python command-line application that utilizes OpenAI's Whisper m
 - Support for multiple audio formats (mp3, m4a, wav, etc.).
 - Selection of Whisper model sizes (tiny, base, small, medium, large) for varied accuracy.
 - Interactive prompts to guide users through the configuration when arguments are not provided.
+- Live recording to a file with optional MP3 encoding.
+- Continuous transcription display during live audio processing.
+- Ability to record and transcribe simultaneously.
 
 ## Installation
 
@@ -45,8 +48,8 @@ Ensure you have the latest version of Python and pip. If you encounter any issue
 
 If no arguments or only partial arguments are provided, the program enters an interactive mode:
 
-- **Model Selection**: The program will list all available Whisper models. You can select the desired model by typing its corresponding letter (e.g., 'b' for base).
-- **Audio Source and Device**: If the audio source or device is not specified, the program will list all available audio input and output devices. You can then select the appropriate device by typing its number.
+- Model Selection: The program will list all available Whisper models. You can select the desired model by typing its corresponding letter (e.g., 'b' for base).
+- Audio Source and Device: If the audio source or device is not specified, the program will list all available audio input and output devices. You can then select the appropriate device by typing its number.
 
 This mode is designed to be user-friendly, especially for those unfamiliar with command-line arguments.
 
@@ -54,10 +57,17 @@ This mode is designed to be user-friendly, especially for those unfamiliar with 
 
 For advanced users or automated setups, providing all necessary arguments enables a non-interactive mode. This allows the program to run end-to-end without additional input, ideal for scripting or batch processing.
 
+To record live audio while transcribing, use the `--record` flag:
+
+`python src/main.py --model base --source i --record`
+
 ### Command-Line Argument Details
 
 - `--file`: Provide the path to an audio file for transcription. If this argument is used, the program will not enter live recording mode.
-- When `--model`, `--source`, or `--device` is partially provided, the program will only prompt for the missing arguments.
+- `--model`: Select the Whisper model size (options: 'tiny', 'base', 'small', 'medium', 'large').
+- `--source`: Choose the audio source - 'i' for input (microphone), 'o' for output (system audio).
+- `--device`: Specify the device number for audio input/output as listed by your operating system.
+- `--record`: Record the live audio to a file while transcribing.
 
 ### Basic Usage
 
@@ -87,13 +97,17 @@ For advanced users or automated setups, providing all necessary arguments enable
 
   `python src/main.py --model large --file ./audio/sample.mp3`
 
+- To record and transcribe live audio with the base model:
+
+  `python src/main.py --model base --source i --record`
+
 ## Configuration
 
 The Transcribe application allows configuration through command-line arguments or interactive prompts:
 
-- **Model Selection**: Choose between different Whisper model sizes based on accuracy and performance requirements. 'tiny' is the fastest but least accurate, while 'large' offers the highest accuracy at the cost of speed.
-- **Audio Source**: Toggle between live audio input (microphone) and system audio output for transcription.
-- **Device Selection**: Specify the particular input/output device by its number, which can be obtained from the system's audio settings or by running the application without the `--device` argument to list available devices.
+- Model Selection: Choose between different Whisper model sizes based on accuracy and performance requirements. 'tiny' is the fastest but least accurate, while 'large' offers the highest accuracy at the cost of speed.
+- Audio Source: Toggle between live audio input (microphone) and system audio output for transcription.
+- Device Selection: Specify the Device Selection: Specify the particular input/output device by its number, which can be obtained from the system's audio settings or by running the application without the `--device` argument to list available devices.
 
 ## Contributing
 

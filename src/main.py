@@ -9,6 +9,8 @@ import datetime
 import argparse
 import pyaudio
 import wave
+from pydub import AudioSegment
+import lameenc
 
 warnings.filterwarnings("ignore", message="FP16 is not supported on CPU; using FP32 instead")
 
@@ -109,14 +111,24 @@ def record_live_audio(output_file_path):
     stream.close()
     p.terminate()
 
-    # Save the recorded data as a WAV file
-    wf = wave.open(output_file_path.replace('.txt', '.wav'), 'wb')
-    wf.setnchannels(1)
-    wf.setsampwidth(p.get_sample_size(pyaudio.paInt16))
-    wf.setframerate(16000)
-    wf.writeframes(b''.join(frames))
-    wf.close()
-    print(f"Recording completed. Output saved to {output_file_path.replace('.txt', '.wav')}")
+    # Convert the recorded frames to a byte array
+    recorded_data = b''.join(frames)
+
+    # Encode the byte array to MP3 using lameenc
+    encoder = lameenc.Encoder()
+    encoder.set_bit_rate(256)
+    encoder.set_in_sample_rate(16000)
+    encoder.set_channels(1)
+    encoder.set_quality(2)  # 2 is the highest quality
+
+    mp3_data = encoder.encode(recorded_data)
+    mp3_data += encoder.flush()
+
+    mp3_path = output_file_path.replace('.txt', '.mp3')
+    with open(mp3_path, 'wb') as mp3_file:
+        mp3_file.write(mp3_data)
+
+    print(f"Recording completed. Output saved to {mp3_path}")
 
 if __name__ == "__main__":
     args = setup_argparse()
