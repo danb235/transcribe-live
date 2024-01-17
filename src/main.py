@@ -7,6 +7,8 @@ import warnings
 import os
 import datetime
 import argparse
+import pyaudio
+import wave
 
 warnings.filterwarnings("ignore", message="FP16 is not supported on CPU; using FP32 instead")
 
@@ -23,6 +25,7 @@ def setup_argparse():
     parser.add_argument("--source", choices=['i', 'o'], help="Audio source for live recording.")
     parser.add_argument("--device", type=int, help="Device number for live audio source.")
     parser.add_argument("--file", help="Path to an existing audio file to transcribe.")
+    parser.add_argument("--record", action='store_true', help="Record live audio to a file.")
     return parser.parse_args()
 
 def list_devices(kind='input'):
@@ -91,6 +94,30 @@ def process_audio_chunks(model, output_file):
     except Exception as e:
         print("An error occurred in processing:", e)
 
+def record_live_audio(output_file_path):
+    p = pyaudio.PyAudio()
+    stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=1024)
+    print("Recording... (Press Enter to stop)")
+
+    frames = []
+    while not stop_signal.is_set():
+        data = stream.read(1024)
+        frames.append(data)
+
+    # Stop and close the stream
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+
+    # Save the recorded data as a WAV file
+    wf = wave.open(output_file_path.replace('.txt', '.wav'), 'wb')
+    wf.setnchannels(1)
+    wf.setsampwidth(p.get_sample_size(pyaudio.paInt16))
+    wf.setframerate(16000)
+    wf.writeframes(b''.join(frames))
+    wf.close()
+    print(f"Recording completed. Output saved to {output_file_path.replace('.txt', '.wav')}")
+
 if __name__ == "__main__":
     args = setup_argparse()
 
@@ -115,6 +142,16 @@ if __name__ == "__main__":
         model_key = input("Select model size (e.g., 'b' for base): ").lower()
         model_choice = model_map.get(model_key, "base")
 
+        if args.live_record or input("Do you want to record live audio? (y/n): ").lower() == 'y':
+            recording_thread = threading.Thread(target=record_live_audio, args=(output_file,))
+            recording_thread.start()
+
+    # Prompt for live recording if the --record argument is not provided
+    if not args.record:
+        user_wants_to_record = input("Do you want to record live audio? (y/n): ").lower() == 'y'
+    else:
+        user_wants_to_record = True
+
     if args.file:
         model = whisper.load_model(model_choice)
         transcribe_audio_file(model, args.file)
@@ -133,6 +170,10 @@ if __name__ == "__main__":
         timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         output_file = os.path.join(output_dir, f"{timestamp}.txt")
 
+        if user_wants_to_record:
+            recording_thread = threading.Thread(target=record_live_audio, args=(output_file,))
+            recording_thread.start()
+
         processing_thread = threading.Thread(target=process_audio_chunks, args=(model, output_file))
         processing_thread.start()
 
@@ -149,4 +190,5 @@ if __name__ == "__main__":
         finally:
             processing_thread.join()
 
-
+        if user_wants_to_record:
+            recording_thread.join()
