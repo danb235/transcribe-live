@@ -121,18 +121,16 @@ def record_live_audio(output_file_path):
 if __name__ == "__main__":
     args = setup_argparse()
 
+    # Define the model_map
     model_map = {
-        "t": "tiny",
-        "b": "base",
-        "s": "small",
-        "m": "medium",
-        "l": "large"
+        't': 'tiny',
+        'b': 'base',
+        's': 'small',
+        'm': 'medium',
+        'l': 'large'
     }
 
-    if args.file and (args.source or args.device):
-        print("Error: Cannot mix file transcription with live audio source arguments.")
-        exit(1)
-
+    # Initialize model_choice based on args.model or prompt the user
     if args.model in model_map:
         model_choice = model_map[args.model]
     else:
@@ -142,33 +140,34 @@ if __name__ == "__main__":
         model_key = input("Select model size (e.g., 'b' for base): ").lower()
         model_choice = model_map.get(model_key, "base")
 
-        if args.live_record or input("Do you want to record live audio? (y/n): ").lower() == 'y':
-            recording_thread = threading.Thread(target=record_live_audio, args=(output_file,))
-            recording_thread.start()
-
-    # Prompt for live recording if the --record argument is not provided
-    if not args.record:
-        user_wants_to_record = input("Do you want to record live audio? (y/n): ").lower() == 'y'
-    else:
-        user_wants_to_record = True
+    model = whisper.load_model(model_choice)
 
     if args.file:
-        model = whisper.load_model(model_choice)
+        # Process the provided audio file
         transcribe_audio_file(model, args.file)
     else:
-        model = whisper.load_model(model_choice)
-        if args.source:
-            source = 'o' if args.source.lower() == 'o' else 'i'
-        else:
+        # Live recording/transcription
+        if not args.source:
             source = input("Choose audio source - Input (i) or Output (o): ").lower()
+        else:
+            source = 'o' if args.source.lower() == 'o' else 'i'
 
         devices = list_devices('output' if source == 'o' else 'input')
-        device_num = args.device if args.device is not None else None
-        device = get_device_choice(devices, device_num)
+        if args.device is None:
+            device_choice = get_device_choice(devices)
+        else:
+            device_choice = devices[args.device]['name']
+
         output_dir = "output"
         os.makedirs(output_dir, exist_ok=True)
         timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         output_file = os.path.join(output_dir, f"{timestamp}.txt")
+
+        # Prompt for live recording if the --record argument is not provided
+        if not args.record:
+            user_wants_to_record = input("Do you want to record live audio? (y/n): ").lower() == 'y'
+        else:
+            user_wants_to_record = True
 
         if user_wants_to_record:
             recording_thread = threading.Thread(target=record_live_audio, args=(output_file,))
@@ -178,7 +177,7 @@ if __name__ == "__main__":
         processing_thread.start()
 
         try:
-            with sd.InputStream(device=device, channels=1, callback=audio_callback, samplerate=16000):
+            with sd.InputStream(device=device_choice, channels=1, callback=audio_callback, samplerate=16000):
                 print("Listening... (Press Enter to stop)")
                 input()
                 print("\nStopping and exiting...")
