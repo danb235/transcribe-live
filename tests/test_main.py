@@ -10,8 +10,10 @@ import main
 class TestMain(unittest.TestCase):
 
     @patch('main.setup_argparse')
-    def test_main_no_args(self, mock_setup_argparse):
+    @patch('main.get_device_choice')
+    def test_main_no_args(self, mock_get_device_choice, mock_setup_argparse):
         mock_setup_argparse.return_value = argparse.Namespace(model=None, file=None, device=None, record=False)
+        mock_get_device_choice.return_value = 'Mocked Device Name'
         with patch('builtins.input', return_value='0'), \
             patch('main.record_live_audio'), \
             patch('main.process_audio_chunks'), \
