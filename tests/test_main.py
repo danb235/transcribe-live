@@ -11,7 +11,7 @@ class TestMain(unittest.TestCase):
 
     @patch('main.setup_argparse')
     def test_main_no_args(self, mock_setup_argparse):
-        mock_setup_argparse.return_value = argparse.Namespace(model=None, source=None, device=None, file=None, record=False)
+        mock_setup_argparse.return_value = argparse.Namespace(model=None, file=None, device=None, record=False)
         with patch('builtins.input', return_value='0'), \
             patch('main.record_live_audio'), \
             patch('main.process_audio_chunks'), \
@@ -23,7 +23,7 @@ class TestMain(unittest.TestCase):
     @patch('main.transcribe_audio_file')
     @patch('main.whisper.load_model', return_value='mock_model')
     def test_main_with_file(self, mock_load_model, mock_transcribe_audio_file, mock_setup_argparse):
-        test_args = argparse.Namespace(file='test.wav', model='b', source=None, device=None, record=False)
+        test_args = argparse.Namespace(file='test.wav', model='b', device=None, record=False)
         mock_setup_argparse.return_value = test_args
         with patch('main.setup_argparse', return_value=test_args):
             main.main()
@@ -52,7 +52,7 @@ class TestMain(unittest.TestCase):
         mock_load_model.return_value = mock_model
 
         # Set up the mock arguments to include a file path
-        test_args = argparse.Namespace(file='mock_audio.wav', model='b', source=None, device=None, record=False)
+        test_args = argparse.Namespace(file='mock_audio.wav', model='b', device=None, record=False)
         mock_setup_argparse.return_value = test_args
 
         # Patch the setup_argparse function to return the test arguments
