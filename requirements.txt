@@ -1,4 +1,4 @@
-whisper
+openai-whisper
 sounddevice
 numpy
 pyaudio
