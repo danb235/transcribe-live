@@ -30,7 +30,7 @@ def setup_argparse():
     parser.add_argument("--record", action='store_true', help="Record live audio to a file.")
     return parser.parse_args()
 
-def list_devices(kind='input'):
+def list_devices(kind='input', args=None):
     devices = sd.query_devices()
     input_devices = [device for device in devices if device['max_input_channels'] > 0]
     output_devices = [device for device in devices if device['max_output_channels'] > 0]
@@ -41,7 +41,7 @@ def list_devices(kind='input'):
             print(f"{i}: {device['name']}")
         return input_devices
     else:
-        if args.device is None:
+        if args and args.device is None:
             print("Available output devices:")
             for i, device in enumerate(output_devices):
                 print(f"{i}: {device['name']}")
@@ -165,7 +165,7 @@ def main(args=None):
         else:
             source = 'o' if args.source.lower() == 'o' else 'i'
 
-        devices = list_devices('output' if source == 'o' else 'input')
+        devices = list_devices('output' if source == 'o' else 'input', args)
         if args.device is None:
             device_choice = get_device_choice(devices)
         else:
