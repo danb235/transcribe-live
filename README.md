@@ -4,7 +4,7 @@ Transcribe is a Python command-line application that utilizes OpenAI's Whisper m
 
 ## Features
 
-- Live audio transcription from microphone or system audio.
+- Transcription of live audio from the microphone.
 - Transcription of pre-recorded audio files.
 - Support for multiple audio formats (mp3, m4a, wav, etc.).
 - Selection of Whisper model sizes (tiny, base, small, medium, large) for varied accuracy.
@@ -46,10 +46,11 @@ Ensure you have the latest version of Python and pip. If you encounter any issue
 
 ### Interactive Mode
 
-If no arguments or only partial arguments are provided, the program enters an interactive mode:
+If no arguments or only partial arguments are provided, the program enters an interactive mode, which will guide you through the following configuration steps:
 
-- Model Selection: The program will list all available Whisper models. You can select the desired model by typing its corresponding letter (e.g., 'b' for base).
-- Audio Source and Device: If the audio source or device is not specified, the program will list all available audio input and output devices. You can then select the appropriate device by typing its number.
+- **Model Selection**: The program will list all available Whisper models. You can select the desired model by typing its corresponding letter (e.g., 'b' for base).
+- **Device Selection**: If the `--device` argument is not provided, the program will list all available audio input devices. You can then select the appropriate device by typing its number.
+- **Record Selection**: If you wish to record the live audio, you will be prompted to confirm this by typing 'yes' or 'no'.
 
 This mode is designed to be user-friendly, especially for those unfamiliar with command-line arguments.
 
@@ -59,14 +60,13 @@ For advanced users or automated setups, providing all necessary arguments enable
 
 To record live audio while transcribing, use the `--record` flag:
 
-`python src/main.py --model base --source i --record`
+`python src/main.py --model base --device 0 --record`
 
 ### Command-Line Argument Details
 
 - `--file`: Provide the path to an audio file for transcription. If this argument is used, the program will not enter live recording mode.
 - `--model`: Select the Whisper model size (options: 'tiny', 'base', 'small', 'medium', 'large').
-- `--source`: Choose the audio source - 'i' for input (microphone), 'o' for output (system audio).
-- `--device`: Specify the device number for audio input/output as listed by your operating system.
+- `--device`: Specify the device number for audio input as listed by your operating system.
 - `--record`: Record the live audio to a file while transcribing.
 
 ### Basic Usage
@@ -75,7 +75,7 @@ To record live audio while transcribing, use the `--record` flag:
 
   `python src/main.py`
 
-  This will prompt you to select the Whisper model size and the audio source (input or output). If you choose live audio, you will also be prompted to select the device number for audio input/output.
+  This will prompt you to select the Whisper model size and, if live audio is chosen, the device number for audio input.
 
 - To transcribe a pre-recorded audio file, use:
 
@@ -84,14 +84,13 @@ To record live audio while transcribing, use the `--record` flag:
 ### Command-Line Options
 
 - `--model`: Select the Whisper model size (options: 'tiny', 'base', 'small', 'medium', 'large'). The larger the model, the more accurate but slower the transcription.
-- `--source`: Choose the audio source - 'i' for input (microphone), 'o' for output (system audio).
-- `--device`: Specify the device number for audio input/output as listed by your operating system.
+- `--device`: Specify the device number for audio input as listed by your operating system.
 
 ### Examples
 
 - Transcribing live audio with the base model:
 
-  `python src/main.py --model base --source i`
+  `python src/main.py --model base`
 
 - Transcribing an audio file with the large model:
 
@@ -99,15 +98,14 @@ To record live audio while transcribing, use the `--record` flag:
 
 - To record and transcribe live audio with the base model:
 
-  `python src/main.py --model base --source i --record`
+  `python src/main.py --model base --record`
 
 ## Configuration
 
 The Transcribe application allows configuration through command-line arguments or interactive prompts:
 
-- Model Selection: Choose between different Whisper model sizes based on accuracy and performance requirements. 'tiny' is the fastest but least accurate, while 'large' offers the highest accuracy at the cost of speed.
-- Audio Source: Toggle between live audio input (microphone) and system audio output for transcription.
-- Device Selection: Specify the Device Selection: Specify the particular input/output device by its number, which can be obtained from the system's audio settings or by running the application without the `--device` argument to list available devices.
+- **Model Selection**: Choose between different Whisper model sizes based on accuracy and performance requirements. 'tiny' is the fastest but least accurate, while 'large' offers the highest accuracy at the cost of speed.
+- **Device Selection**: Specify the particular input device by its number, which can be obtained from the system's audio settings or by running the application without the `--device` argument to list available devices.
 
 ## Contributing
 

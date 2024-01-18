@@ -18,13 +18,12 @@ def setup_argparse():
     parser = argparse.ArgumentParser(
         description="""
         Transcribe audio using Whisper. This program can either live record audio or process an existing audio file.
-        To determine the model, source, and device choices for live recording, run the program once without arguments.
-        Example for live recording: python main.py --model b --source o --device 0
+        To determine the model and device choices for live recording, run the program once without arguments.
+        Example for live recording: python main.py --model b --device 0
         Example for processing a file: python main.py --file /path/to/file.mp3""",
         formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument("--model", choices=['t', 'b', 's', 'm', 'l'], help="Whisper model size.")
-    parser.add_argument("--source", choices=['i', 'o'], help="Audio source for live recording.")
     parser.add_argument("--device", type=int, help="Device number for live audio source.")
     parser.add_argument("--file", help="Path to an existing audio file to transcribe.")
     parser.add_argument("--record", action='store_true', help="Record live audio to a file.")
@@ -160,12 +159,7 @@ def main(args=None):
         transcribe_audio_file(model, args.file)
     else:
         # Live recording/transcription
-        if not args.source:
-            source = input("Choose audio source - Input (i) or Output (o): ").lower()
-        else:
-            source = 'o' if args.source.lower() == 'o' else 'i'
-
-        devices = list_devices('output' if source == 'o' else 'input', args)
+        devices = list_devices('input', args)
         if args.device is None:
             device_choice = get_device_choice(devices)
         else:
